@@ -1,0 +1,17 @@
+name: ImageProcessing
+channels:
+  - defaults
+  - anaconda
+  - conda-forge
+dependencies:
+  - python=3.7
+  - cudatoolkit=11.1
+  - pip
+  - pip:
+    - azureml-mlflow
+    - mlflow
+    - azureml-defaults
+    - torch
+    - torchvision
+    - tqdm
+    - sklearn
