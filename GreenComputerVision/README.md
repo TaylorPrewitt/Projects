@@ -1,30 +1,25 @@
-# Trending Towards Waste?
-
-## Background
+# Model Cost Evaluation
 
 
-<br>
-
-## Models
-
-### DenseNet
-[PyTorch Docs](https://pytorch.org/hub/pytorch_vision_densenet/)
-
-### ResNet
-[PyTorch Docs](https://pytorch.org/hub/pytorch_vision_resnet/)
-
-### Inception-v3
-[PyTorch Docs](https://pytorch.org/hub/pytorch_vision_inception_v3/)
-
-
-<br>
-
-## Methods
+## Methods and Hardware
 - GPU - 1 x NVIDIA Tesla T4 (Standard_NC8as_T4_v3 (8 cores, 56 GB RAM, 352 GB disk))
 - Performance logging completed using Azure Monitor
 - All models are pretrained on via PyTorch on ImageNet, and then fine tuned on the MedMNIST pediatric pneumonia dataset. 
 
+
+
 <br>
+
+## Resources
+| **PyTorch Framework**  | **Archive**  | 
+| :----------: | :----------: |
+| [DenseNet](https://pytorch.org/hub/pytorch_vision_densenet/)  | [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.06993) |
+| [ResNet](https://pytorch.org/hub/pytorch_vision_resnet/)| [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385) |
+| [Inception-v3](https://pytorch.org/hub/pytorch_vision_inception_v3/)| [Rethinking the Inception Architecture for Computer Vision](https://pytorch.org/hub/pytorch_vision_inception_v3/)| 
+|  | [Green AI](https://arxiv.org/abs/1907.10597) |
+
+
+
 
 ## Results
 
