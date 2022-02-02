@@ -19,7 +19,7 @@
 |  | [Green AI](https://arxiv.org/abs/1907.10597) |
 
 
-
+<br>
 
 ## Results
 
@@ -31,4 +31,14 @@
 | ResNet-18  |  0.84615 | 0.96704 | 82.1 | 04:57 | 20.4 |
 | ResNet-50  |  0.83654 | 0.9421 | 97.6 | 20:33 | 84.7 |
 | Inception-v3  |  0.87340 | 0.94472 | 92.3 | 09:06 | 37.5 |
+
+
+![EnergyConsumption](https://user-images.githubusercontent.com/80305894/152247072-ee8a1aa1-9fea-4e1e-840b-16d7e7993e2c.png)
+<br>
+
+![AUC](https://user-images.githubusercontent.com/80305894/152247098-d4ddbf30-0588-4270-a5f3-c9f0160bcf10.png)
+<br>
+
+![ACC](https://user-images.githubusercontent.com/80305894/152247115-fb1d6094-f8f3-45a5-8817-48d3722c89fb.png)
+<br>
 
