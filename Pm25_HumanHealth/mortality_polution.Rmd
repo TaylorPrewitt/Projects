@@ -1,0 +1,475 @@
+---
+title: "PM2.5 Concentration and Human Health"
+author: "Taylor Prewitt"
+date: "2/1/2022"
+output:
+  github_document:
+    html_preview: True
+---
+
+
+# Introduction
+
+PM2.5 inhalation has been linked to health complications, ([Negative PM2.5 Impacts]("#https://www.health.ny.gov/environmental/indoors/air/pmq_a.htm#:~:text=Exposure%20to%20fine%20particles%20can,as%20asthma%20and%20heart%20disease.")). Looking at county level death and their causes along with county level PM2.5 particle concentration, I will investigate a potential relationship between the two. 
+
+
+```{r}
+# loading in libraries for investigation 
+
+library(tidyverse)
+library(ggplot2)
+library(MASS)
+
+```
+
+
+
+```{r}
+
+# loading in the data, county level mortality
+mort_data = read.csv("mort.csv",
+                  header=TRUE)
+
+# loading in the data, county level PM2.5 concentrations  
+p25_data = read.csv("Daily_PM2.5_Concentrations_All_County__2001-2016.csv",
+                  header=TRUE)
+
+
+```
+
+
+```{r}
+# data examples
+head(mort_data)
+head(p25_data)
+
+```
+# Data Descriptions and Sources:
+
+## Mortality Rates
+| **Parameter**  | **Description**  | 
+| :----------: | :----------: |
+| Location  | County and State of record |
+| FIPS | Federal Information Processing Standard county code |
+| Category | Cause of death | 
+| Mortality.Rate.xx.Min | Minimum deaths per 100,000 population during the year 'xx' | 
+| Mortality.Rate.xx.Max | Maximum deaths per 100,000 population during the year 'xx' | 
+| Mortality.Rate.xx. | Mean deaths per 100,000 population over the year 'xx' |  
+
+[Mortality Dataset]("https://www.kaggle.com/IHME/us-countylevel-mortality/version/2")
+
+
+
+
+## PM2.5 Concentration Rates
+| **Parameter**  | **Description**  | 
+| :----------: | :----------: |
+| year  | Year of prediction |
+| date | Date (day-month-year) of prediction |
+| statefips | State FIPS code | 
+| countyfips | County FIPS code | 
+| PM25_max_pred | Maximum estimated 24-hour average PM2.5 concentration in μg/m3 for the county | 
+| PM25_med_pred | 	Median estimated 24-hour average PM2.5 concentration in μg/m3 for the county | 
+| PM25_mean_pred |Mean estimated 24-hour average PM2.5 concentration in μg/m3 for the county | 
+| PM25_pop_pred |Population-weighted estimated 24-hour average PM2.5 concentration in μg/m3 for the county | 
+
+[PM2.5 Dataset]("https://data.cdc.gov/Environmental-Health-Toxicology/Daily-PM2-5-Concentrations-All-County-2001-2016/7vdq-ztk9")
+
+
+
+```{r}
+# inspecting data types
+
+str(mort_data)
+str(p25_data)
+
+```
+
+```{r}
+# general inspection of data
+
+dim(mort_data)
+names(mort_data)
+
+dim(p25_data)
+names(p25_data)
+
+```
+
+Looking at the date ranges, the Mortality Rate data set covers the years 1980-2014 and the PM2.5 data set is for the years 2001-2016.  Further more, the the years covered by the Mortality set are not consecutive, having records approximately every 5 years.  Due to this the only years in common are 2005, 2010, and 2014.  
+
+The PM2.5 set includes both the median and the mean observations over the duration of data collection.  For this investigation the mean value will be used operating with a first order assumption that PM2.5 concentration is uniform over each county.
+
+
+```{r}
+# getting causes of death
+unique(mort_data$Category)
+
+```
+As explained in [Negative PM2.5 Impacts]("#https://www.health.ny.gov/environmental/indoors/air/pmq_a.htm#:~:text=Exposure%20to%20fine%20particles%20can,as%20asthma%20and%20heart%20disease."), PM2.5 has not been shown to significantly impact all of these causes of death, for example, "Transport injuries". Excluding any causes of death not previously shown to have a correlation to PM2.5 respective health complication, the only causes of death considered are: "Chronic respiratory diseases", "Cardiovascular diseases", "Neonatal disorders", and "Other non-communicable diseases".
+
+
+```{r}
+
+# creating function to count any missing values in data
+count_missing_vals = function(df) {
+  missing_vals = c(0)
+  dataset = df
+  for (col in 1:ncol(dataset))
+    {
+    missing_vals = append(missing_vals, sum(is.na(dataset[,col])))
+          }
+  missing_vals = missing_vals[1:length(dataset)]
+  missing_vals_df = data.frame(Variable = c(colnames(dataset)),
+                                NumMissing = missing_vals)
+  return(missing_vals_df)
+}
+
+```
+
+
+```{r}
+# searching for missing values
+
+count_missing_vals(mort_data)
+count_missing_vals(p25_data)
+
+```
+
+# Data Processing
+```{r}
+# condense p25_data to year value from daily. with only common years
+
+
+# making df with for model with no index values as variable
+p25_df = p25_data %>% 
+  group_by(year, statefips, countyfips) %>%
+  filter(year %in% c(2005, 2010, 2014)) %>% 
+  summarise(PM25_mean = mean(PM25_mean_pred))
+
+
+# get yearly average PM2.5 value
+p25_df = aggregate(p25_df[, 2:4], list(p25_df$year, p25_df$statefips, p25_df$countyfips), mean)
+
+# keep only needed columns and rename
+p25_df = p25_df %>% 
+  dplyr::select(Group.1, Group.2, Group.3, PM25_mean)
+colnames(p25_df) = c('year','statefips', 'countyfips', 'PM25_mean')
+
+
+head(p25_df)
+
+
+```
+
+```{r}
+
+# keep data with common years for linked health issues
+mort_df = mort_data %>% 
+  group_by(Category) %>% 
+  filter(Category %in% c("Chronic respiratory diseases", "Cardiovascular diseases",
+                         "Neonatal disorders", "Other non-communicable diseases")) %>% 
+  dplyr::select(Location, 
+                FIPS, 
+                Mortality.Rate..2005., 
+                Mortality.Rate..2010., 
+                Mortality.Rate..2014., 
+                Category)
+
+
+# mean mortality for all selected causes per county
+mort_df = mort_df %>% 
+  group_by(Location, FIPS) %>% 
+  summarise(MR_2005 = mean(Mortality.Rate..2005.), 
+            MR_2010 = mean(Mortality.Rate..2010.), 
+            MR_2014 = mean(Mortality.Rate..2014.))
+  
+head(mort_df)
+
+
+```
+
+```{r}
+
+# transpose year data into columns for FIPS joining 
+p25_df = pivot_wider(p25_df, 
+                         id_cols = c("statefips","countyfips"),
+                         names_from = "year", 
+                         values_from = "PM25_mean")
+
+
+head(p25_df)
+
+
+```
+
+
+```{r}
+# recast as characters to create compound FIPS
+p25_df$countyfips =  as.character(p25_df$countyfips)
+p25_df$statefips =  as.character(p25_df$statefips)
+
+# creating descriptive FIPS with both state and county
+p25_df = p25_df %>%
+  mutate(coded_countyFIPS = case_when(nchar(countyfips) == 1 ~ paste0("00", countyfips),
+                      nchar(countyfips) == 2 ~ paste0("0", countyfips),
+                      nchar(countyfips) == 3 ~ countyfips)) %>% 
+  mutate(coded_stateFIPS = case_when(nchar(statefips) == 1 ~ paste0("0", statefips),
+                    nchar(statefips) == 2 ~ statefips)) %>% 
+  mutate(FIPS = paste0(coded_stateFIPS, coded_countyFIPS)) %>% 
+  dplyr::select(-countyfips, -statefips, -coded_countyFIPS, -coded_stateFIPS) %>% 
+  drop_na()
+
+# rename columns
+colnames(p25_df) = c('PM25_mean2005','PM25_mean2010', 'PM25_mean2014', 'FIPS')
+
+```
+
+
+
+```{r}
+# wrangled data example (pre-join)
+
+# Reverting FIPS dtype to match mort_df now that compound FIPS has been made
+p25_df$FIPS =  as.double(p25_df$FIPS)
+
+head(mort_df)
+head(p25_df)
+
+# Joined data on FIPS.
+
+data = inner_join(p25_df, mort_df, by="FIPS")
+
+
+head(data)
+
+```
+# Experiment and Results
+```{r}
+# exploratory plotting to find an appropriate models
+
+# 2005
+ggplot() +
+  geom_point(mapping = aes(x = PM25_mean2005, y = MR_2005), 
+             data = data, 
+             shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 1: Mortality Rate vs PM2.5 Concentration with Residuals, 2005") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_smooth(data= data, mapping = aes(x = PM25_mean2005,y = MR_2005))
+ 
+# 2010
+ggplot(data = data) +
+  geom_point(mapping = aes(x = PM25_mean2010, 
+                           y = MR_2010), 
+                           shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 2: Mortality Rate vs PM2.5 Concentration with Residuals, 2010") +
+  ylim(0, 200) +
+  xlim(0, 19)+ 
+  geom_smooth(data= data, mapping = aes(x = PM25_mean2010,y = MR_2010))
+
+# 2014
+ggplot(data = data) +
+  geom_point(mapping = aes(x = PM25_mean2014, 
+                           y = MR_2014), 
+                           shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 3: Mortality Rate vs PM2.5 Concentration with Residuals, 2014") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_smooth(data= data, 
+              mapping = aes(x = PM25_mean2014,y = MR_2014))
+
+
+```
+
+
+
+
+```{r}
+
+# Linear models for each year.
+
+model_2005 = lm(MR_2005 ~  PM25_mean2005, data = data)
+summary(model_2005)
+
+model_2010 = lm(MR_2010 ~  PM25_mean2010, data = data)
+summary(model_2010)
+
+model_2014 = lm(MR_2014 ~  PM25_mean2014, data = data)
+summary(model_2014)
+```
+
+
+```{r}
+# Plot of data, best fit line, and model residuals for 2005
+ggplot() +
+  geom_point(mapping = aes(x = PM25_mean2005, y = MR_2005), 
+             data = data, 
+             shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 4: Mortality Rate vs PM2.5 Concentration with Residuals, 2005") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_function(fun = function(x) coef(model_2005)[1] + coef(model_2005)[2]*x, 
+                col='red', 
+                size = 1.1) +
+  geom_segment(aes(x=data$PM25_mean2005, 
+                   y= data$MR_2014 ,
+                   xend = data$PM25_mean2005, 
+                   yend = model_2005$fitted.values), 
+               alpha = 0.07,
+               col='magenta')               
+
+
+# Plot of data, best fit line, and model residuals for 2010
+ggplot(data = data) +
+  geom_point(mapping = aes(x = PM25_mean2010, 
+                           y = MR_2010), 
+                           shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 5: Mortality Rate vs PM2.5 Concentration with Residuals, 2010") +
+  ylim(0, 200) +
+  xlim(0, 19)+ 
+  geom_function(fun = function(x) coef(model_2010)[1] + coef(model_2010)[2]*x, 
+              col='red', 
+              size = 1.1) +
+  geom_segment(aes(x=PM25_mean2010, 
+                   y= MR_2010 ,
+                   xend = PM25_mean2010, 
+                   yend = model_2010$fitted.values), 
+               alpha = 0.07,
+               col='magenta')
+
+
+# Plot of data, best fit line, and model residuals for 2014
+ggplot(data = data) +
+  geom_point(mapping = aes(x = PM25_mean2014, 
+                           y = MR_2014), 
+                           shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 6: Mortality Rate vs PM2.5 Concentration with Residuals, 2014") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_function(fun = function(x) coef(model_2014)[1] + coef(model_2014)[2]*x, 
+              col='red', 
+              size = 1.1) +
+  geom_segment(aes(x=PM25_mean2014, 
+                   y= MR_2014 ,
+                   xend = PM25_mean2014, 
+                   yend = model_2014$fitted.values), 
+               alpha = 0.07,
+               col='magenta') 
+
+
+```
+
+Being unlikely that populations respond differently to PM2.5 between the years 2005 and 2014, all years of data are combined to get a first order approximation of any relationship between PM2.5 concentration and human morality rates.
+
+
+```{r}
+
+time_invar_data = data.frame(data$Location, data$FIPS, 
+                       c(data$PM25_mean2005, data$PM25_mean2010, data$PM25_mean2014),
+                       c(data$MR_2005, data$MR_2010, data$MR_2014))
+colnames(time_invar_data) = c("Location", "FIPS", "PM25_mean", "MR")
+
+
+```
+
+
+```{r}
+# time invariant data exploration
+
+# All Years
+ggplot() +
+  geom_point(mapping = aes(x = PM25_mean, y = MR), 
+             data = time_invar_data, 
+             shape = 1) +
+  theme_light() +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 7: Mortality Rate vs PM2.5 Concentration with Residuals") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_smooth(data= time_invar_data, mapping = aes(x = PM25_mean,y = MR))
+```
+Time invariant data shows a stronger linear relationship. Still retains trend seen in yearly models around 9 micrograms per cubic meter where there is an increase in mortality. 
+
+
+```{r}
+# making a linear model with data from all three years
+model = lm(MR ~  PM25_mean, data = time_invar_data)
+coef(model)
+summary(model)
+
+# plotting time invariant data, best fit, and residuals
+ggplot(data = time_invar_data) +
+  geom_point(mapping = aes(x = PM25_mean, 
+                           y = MR), 
+               shape = 1,
+               col="black") +
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 8: Mortality Rate vs PM2.5 Concentration with Residuals, All Years") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  geom_segment(aes(x=PM25_mean, 
+                 y= MR ,
+                 xend = PM25_mean, 
+                 yend = model$fitted.values), 
+             alpha = 0.05,
+             col='magenta') + 
+
+  geom_function(fun = function(x) coef(model)[1] + coef(model)[2]*x, 
+              col='red', 
+              size = 1.1,) +
+  theme_light()
+
+```
+<center><sup><i>Above is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b>, linear regression model <b><span style="color: red"> (Red) </span></b>, and the distribution residuals <b><span style="color: magenta"> (Magenta) </span></b>.</i></sup></center> 
+
+
+# Discussion
+
+Using all overlapping data from both sets to examine the potential relationship between airborne PM2.5 concentrations and mortality rates due to health complications which have been previously linked to its inhalation, a linear model was created and visualized in Figure 8. 
+
+
+**Equation 1:** <br>
+<i>MR = (58.8 +/- 0.682) + (3.37 +/- 0.0684)p</i>
+
+Equation 1 states that the Mortality Rate (MR) increases by approximately 3.37 per 100,000 population (p) for each integer increase of PM2.5 concentration measured in micrograms per cubic meter, and as seen in Figure 8 fits the trend data fairly well. This is an one variable approximation of a complex system, and as such it is not expected to get an exceptionally high R<sup>2</sup> value. The observed value was 0.2067 R<sup>2</sup> which supports the concept that mortality from these health conditions has other deterministic factors outside of PM2.5 presence in the air. However, the p-value: < 2.2e<sup>-16</sup> signifies that the observed relationship between increased PM2.5 pollution and increased mortality due to the linked health complications is very unlikely to be a random occurrence.  
+
+Looking at the residuals, there around 9 micrograms per cubic meter there is a break from being normally distributed about the trend line. This was also observed in the single year models and is where an increase in morality rate occurs and is not accurately described by a linear fit.  
+
+Moving forward, any investigation should include: <br>
+- other airborne pollutants linked to the health conditions. Specifically, any co-occurring pollutants present at higher PM2.5 concentrations and not low concentrations. <br>
+- further research in PM2.5 toxicity threshold <br>
+- deeper investigation into relationships between PM2.5 and specific causes of death, not all linked causes. <br>
+
+
+
+
+
+
+
+
+
+
+
+
+
