@@ -7,7 +7,7 @@ Looking into ACC, AUC, and Cost variations between 6 PyTorch models using the Az
 Combining two datasets from University of Washington Institute for Health Metrics and Evaluation and US Center for Disease Control which both use county level observations, to inspect any relationship between airborne PM2.5 pollution concentration and human mortality.  
 
 ### Fetal_Health
-Find top features for medical professionals to use in a clinical setting to identify fetal health by creating a multiclass model of trained on fetal cardiotocogram results.
+Find top features for medical professionals to use in a clinical setting to identify fetal health by creating a multiclass model trained on fetal cardiotocogram results.
 
 ### Falling_Sky
 Query the NASA API to gather information available about Near Earth Objects (NEO) and then calculate details about a potential impact with Earth.
