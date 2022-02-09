@@ -12,27 +12,16 @@ Looking at county level death and their causes along with county level
 PM2.5 particle concentration, I will investigate a potential
 relationship between the two.
 
-``` r
-# loading in libraries for investigation 
-
-library(tidyverse)
-```
-
-    ## -- Attaching packages --------------------------------------------------------------------------------------- tidyverse 1.3.0 --
+    ## -- Attaching packages -------------------------------------------------------------------------- tidyverse 1.3.0 --
 
     ## v ggplot2 3.3.2     v purrr   0.3.4
     ## v tibble  3.0.3     v dplyr   1.0.2
     ## v tidyr   1.1.2     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.5.0
 
-    ## -- Conflicts ------------------------------------------------------------------------------------------ tidyverse_conflicts() --
+    ## -- Conflicts ----------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
-
-``` r
-library(ggplot2)
-library(MASS)
-```
 
     ## 
     ## Attaching package: 'MASS'
@@ -40,6 +29,28 @@ library(MASS)
     ## The following object is masked from 'package:dplyr':
     ## 
     ##     select
+
+    ## Warning: package 'gridExtra' was built under R version 4.0.5
+
+    ## 
+    ## Attaching package: 'gridExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+    ## Warning: package 'olsrr' was built under R version 4.0.5
+
+    ## 
+    ## Attaching package: 'olsrr'
+
+    ## The following object is masked from 'package:MASS':
+    ## 
+    ##     cement
+
+    ## The following object is masked from 'package:datasets':
+    ## 
+    ##     rivers
 
 ``` r
 # loading in the data, county level mortality
@@ -192,12 +203,6 @@ Dataset](%22https://www.kaggle.com/IHME/us-countylevel-mortality/version/2%22)
 [PM2.5
 Dataset](%22https://data.cdc.gov/Environmental-Health-Toxicology/Daily-PM2-5-Concentrations-All-County-2001-2016/7vdq-ztk9%22)
 
-``` r
-# inspecting data types
-
-str(mort_data)
-```
-
     ## 'data.frame':    67074 obs. of  30 variables:
     ##  $ Location                                    : chr  "United States" "Alabama" "Autauga County, Alabama" "Baldwin County, Alabama" ...
     ##  $ FIPS                                        : num  NaN 1 1001 1003 1005 ...
@@ -229,10 +234,6 @@ str(mort_data)
     ##  $ X..Change.in.Mortality.Rate..1980.2014      : num  -63.9 -53.8 -52.4 -58 -55.9 ...
     ##  $ X..Change.in.Mortality.Rate..1980.2014..Min.: num  -69 -60.1 -60 -65 -62.5 ...
     ##  $ X..Change.in.Mortality.Rate..1980.2014..Max.: num  -61.5 -50.8 -46.2 -52.9 -50.3 ...
-
-``` r
-str(p25_data)
-```
 
     ## 'data.frame':    18168996 obs. of  8 variables:
     ##  $ year          : int  2001 2001 2001 2001 2001 2001 2001 2001 2001 2001 ...
@@ -349,23 +350,19 @@ and “Other non-communicable diseases”.
 
 ``` r
 # creating function to count any missing values in data
-count_missing_vals = function(df) {
-  missing_vals = c(0)
+count_missing_vals = function(df) 
+  {missing_vals = c(0)
   dataset = df
   for (col in 1:ncol(dataset))
-    {
-    missing_vals = append(missing_vals, sum(is.na(dataset[,col])))
-          }
+    {missing_vals = append(missing_vals, sum(is.na(dataset[,col])))}
   missing_vals = missing_vals[1:length(dataset)]
   missing_vals_df = data.frame(Variable = c(colnames(dataset)),
                                 NumMissing = missing_vals)
-  return(missing_vals_df)
-}
+  return(missing_vals_df)}
 ```
 
 ``` r
 # searching for missing values
-
 count_missing_vals(mort_data)
 ```
 
@@ -415,6 +412,197 @@ count_missing_vals(p25_data)
     ## 7 PM25_mean_pred          0
     ## 8  PM25_pop_pred          0
 
+``` r
+# find NA values from count
+which(is.na(mort_data))
+```
+
+    ##  [1]  67075  70269  73463  76657  79851  83045  86239  89433  92627  95821
+    ## [11]  99015 102209 105403 108597 111791 114985 118179 121373 124567 127761
+    ## [21] 130955
+
+``` r
+# inspect data at/around these df cell values
+
+# cell 67075 is index 1 of column 2
+mort_data[1,]
+```
+
+    ##        Location FIPS           Category Mortality.Rate..1980.
+    ## 1 United States  NaN Neonatal disorders                  9.18
+    ##   Mortality.Rate..1980...Min. Mortality.Rate..1980...Max. Mortality.Rate..1985.
+    ## 1                        8.83                        9.93                  6.91
+    ##   Mortality.Rate..1985...Min. Mortality.Rate..1985...Max. Mortality.Rate..1990.
+    ## 1                        6.73                        7.36                  6.09
+    ##   Mortality.Rate..1990...Min. Mortality.Rate..1990...Max. Mortality.Rate..1995.
+    ## 1                        5.94                        6.44                  4.71
+    ##   Mortality.Rate..1995...Min. Mortality.Rate..1995...Max. Mortality.Rate..2000.
+    ## 1                         4.6                        4.84                   4.5
+    ##   Mortality.Rate..2000...Min. Mortality.Rate..2000...Max. Mortality.Rate..2005.
+    ## 1                        4.29                        4.61                  4.44
+    ##   Mortality.Rate..2005...Min. Mortality.Rate..2005...Max. Mortality.Rate..2010.
+    ## 1                        4.18                        4.55                  3.75
+    ##   Mortality.Rate..2010...Min. Mortality.Rate..2010...Max. Mortality.Rate..2014.
+    ## 1                        3.43                        3.85                  3.32
+    ##   Mortality.Rate..2014...Min. Mortality.Rate..2014...Max.
+    ## 1                        3.02                        3.45
+    ##   X..Change.in.Mortality.Rate..1980.2014
+    ## 1                                 -63.85
+    ##   X..Change.in.Mortality.Rate..1980.2014..Min.
+    ## 1                                       -68.95
+    ##   X..Change.in.Mortality.Rate..1980.2014..Max.
+    ## 1                                       -61.55
+
+``` r
+mort_data[(70269-67074),]
+```
+
+    ##           Location FIPS                  Category Mortality.Rate..1980.
+    ## 3195 United States  NaN HIV/AIDS and tuberculosis                  1.52
+    ##      Mortality.Rate..1980...Min. Mortality.Rate..1980...Max.
+    ## 3195                        1.44                        1.61
+    ##      Mortality.Rate..1985. Mortality.Rate..1985...Min.
+    ## 3195                  3.16                        3.11
+    ##      Mortality.Rate..1985...Max. Mortality.Rate..1990.
+    ## 3195                        3.22                 11.45
+    ##      Mortality.Rate..1990...Min. Mortality.Rate..1990...Max.
+    ## 3195                       11.34                       11.56
+    ##      Mortality.Rate..1995. Mortality.Rate..1995...Min.
+    ## 3195                 16.61                       16.48
+    ##      Mortality.Rate..1995...Max. Mortality.Rate..2000.
+    ## 3195                       16.74                  5.97
+    ##      Mortality.Rate..2000...Min. Mortality.Rate..2000...Max.
+    ## 3195                        5.92                        6.02
+    ##      Mortality.Rate..2005. Mortality.Rate..2005...Min.
+    ## 3195                  4.87                        4.83
+    ##      Mortality.Rate..2005...Max. Mortality.Rate..2010.
+    ## 3195                        4.91                   3.2
+    ##      Mortality.Rate..2010...Min. Mortality.Rate..2010...Max.
+    ## 3195                        3.17                        3.22
+    ##      Mortality.Rate..2014. Mortality.Rate..2014...Min.
+    ## 3195                  2.66                        2.63
+    ##      Mortality.Rate..2014...Max. X..Change.in.Mortality.Rate..1980.2014
+    ## 3195                        2.69                                  74.35
+    ##      X..Change.in.Mortality.Rate..1980.2014..Min.
+    ## 3195                                        64.77
+    ##      X..Change.in.Mortality.Rate..1980.2014..Max.
+    ## 3195                                        84.14
+
+``` r
+mort_data[(70269-67072):(70269-67076),]
+```
+
+    ##                      Location  FIPS                  Category
+    ## 3197  Autauga County, Alabama  1001 HIV/AIDS and tuberculosis
+    ## 3196                  Alabama     1 HIV/AIDS and tuberculosis
+    ## 3195            United States   NaN HIV/AIDS and tuberculosis
+    ## 3194   Weston County, Wyoming 56045        Neonatal disorders
+    ## 3193 Washakie County, Wyoming 56043        Neonatal disorders
+    ##      Mortality.Rate..1980. Mortality.Rate..1980...Min.
+    ## 3197                  0.95                        0.68
+    ## 3196                  1.46                        1.33
+    ## 3195                  1.52                        1.44
+    ## 3194                  8.49                        6.97
+    ## 3193                  7.56                        6.29
+    ##      Mortality.Rate..1980...Max. Mortality.Rate..1985.
+    ## 3197                        1.29                  1.44
+    ## 3196                        1.59                  2.15
+    ## 3195                        1.61                  3.16
+    ## 3194                       10.19                  6.11
+    ## 3193                        9.14                  5.74
+    ##      Mortality.Rate..1985...Min. Mortality.Rate..1985...Max.
+    ## 3197                        1.12                        1.86
+    ## 3196                        2.03                        2.27
+    ## 3195                        3.11                        3.22
+    ## 3194                        5.03                        7.25
+    ## 3193                        4.75                        6.92
+    ##      Mortality.Rate..1990. Mortality.Rate..1990...Min.
+    ## 3197                  6.57                        5.49
+    ## 3196                  8.03                        7.79
+    ## 3195                 11.45                       11.34
+    ## 3194                  5.07                        4.28
+    ## 3193                  4.83                        4.02
+    ##      Mortality.Rate..1990...Max. Mortality.Rate..1995.
+    ## 3197                        7.84                 10.75
+    ## 3196                        8.25                 14.10
+    ## 3195                       11.56                 16.61
+    ## 3194                        6.03                  3.92
+    ## 3193                        5.80                  3.79
+    ##      Mortality.Rate..1995...Min. Mortality.Rate..1995...Max.
+    ## 3197                        9.18                       12.50
+    ## 3196                       13.76                       14.43
+    ## 3195                       16.48                       16.74
+    ## 3194                        3.26                        4.65
+    ## 3193                        3.17                        4.55
+    ##      Mortality.Rate..2000. Mortality.Rate..2000...Min.
+    ## 3197                  3.62                        2.94
+    ## 3196                  5.47                        5.30
+    ## 3195                  5.97                        5.92
+    ## 3194                  3.79                        3.15
+    ## 3193                  3.79                        3.15
+    ##      Mortality.Rate..2000...Max. Mortality.Rate..2005.
+    ## 3197                        4.37                  3.32
+    ## 3196                        5.65                  4.67
+    ## 3195                        6.02                  4.87
+    ## 3194                        4.55                  3.77
+    ## 3193                        4.57                  3.69
+    ##      Mortality.Rate..2005...Min. Mortality.Rate..2005...Max.
+    ## 3197                        2.66                        4.14
+    ## 3196                        4.51                        4.83
+    ## 3195                        4.83                        4.91
+    ## 3194                        3.13                        4.52
+    ## 3193                        3.09                        4.42
+    ##      Mortality.Rate..2010. Mortality.Rate..2010...Min.
+    ## 3197                  2.37                        1.82
+    ## 3196                  3.35                        3.21
+    ## 3195                  3.20                        3.17
+    ## 3194                  3.07                        2.53
+    ## 3193                  3.13                        2.60
+    ##      Mortality.Rate..2010...Max. Mortality.Rate..2014.
+    ## 3197                        3.07                  2.30
+    ## 3196                        3.50                  2.94
+    ## 3195                        3.22                  2.66
+    ## 3194                        3.69                  2.75
+    ## 3193                        3.76                  2.78
+    ##      Mortality.Rate..2014...Min. Mortality.Rate..2014...Max.
+    ## 3197                        1.68                        2.96
+    ## 3196                        2.80                        3.08
+    ## 3195                        2.63                        2.69
+    ## 3194                        2.23                        3.37
+    ## 3193                        2.30                        3.37
+    ##      X..Change.in.Mortality.Rate..1980.2014
+    ## 3197                                 143.15
+    ## 3196                                 101.52
+    ## 3195                                  74.35
+    ## 3194                                 -67.63
+    ## 3193                                 -63.24
+    ##      X..Change.in.Mortality.Rate..1980.2014..Min.
+    ## 3197                                        65.10
+    ## 3196                                        82.33
+    ## 3195                                        64.77
+    ## 3194                                       -73.44
+    ## 3193                                       -69.91
+    ##      X..Change.in.Mortality.Rate..1980.2014..Max.
+    ## 3197                                       245.14
+    ## 3196                                       124.12
+    ## 3195                                        84.14
+    ## 3194                                       -61.73
+    ## 3193                                       -57.42
+
+``` r
+# removing bad data
+mort_data = subset(mort_data, mort_data$FIPS > 1000 | is.na(mort_data$FIPS) == FALSE)
+```
+
+The dataset contained some bad values. The cells which had NaN values
+were in the FIPS column and weren’t associated with any single county.
+These were aggregated United States mortality rates for a given cause of
+death. There are 21 NaN since there are 21 unique causes of death in the
+Mortality dataset. Furthermore, this happened on the state level too.
+This did not create NaN in the FIPS column, but did generate non-county
+specific data. Both of these types of values were removed from
+consideration.
+
 # Data Processing
 
 ``` r
@@ -455,8 +643,10 @@ head(p25_df)
 # keep data with common years for linked health issues
 mort_df = mort_data %>% 
   group_by(Category) %>% 
-  filter(Category %in% c("Chronic respiratory diseases", "Cardiovascular diseases",
-                         "Neonatal disorders", "Other non-communicable diseases")) %>% 
+  filter(Category %in% c("Chronic respiratory diseases", 
+                         "Cardiovascular diseases",
+                         "Neonatal disorders", 
+                         "Other non-communicable diseases")) %>% 
   dplyr::select(Location, 
                 FIPS, 
                 Mortality.Rate..2005., 
@@ -567,7 +757,6 @@ head(p25_df)
 
 ``` r
 # Joined data on FIPS.
-
 data = inner_join(p25_df, mort_df, by="FIPS")
 
 
@@ -591,61 +780,77 @@ head(data)
 # exploratory plotting to find an appropriate models
 
 # 2005
-ggplot() +
+plot_2005 = ggplot() +
+  # data
   geom_point(mapping = aes(x = PM25_mean2005, y = MR_2005), 
              data = data, 
              shape = 1) +
+  # gamma best fit
+  geom_smooth(data= data, mapping = aes(x = PM25_mean2005,y = MR_2005)) +
+  # plot aesthetics
   theme_light() +
   xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
   ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 1: Mortality Rate vs PM2.5 Concentration with Residuals, 2005") +
+  ggtitle("2005") +
   ylim(0, 200) +
-  xlim(0, 19) +
-  geom_smooth(data= data, mapping = aes(x = PM25_mean2005,y = MR_2005))
-```
+  xlim(0, 19)
+ 
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-![](mortality_polution_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
-
-``` r
 # 2010
-ggplot(data = data) +
+plot_2010 = ggplot(data = data) +
+  # data
   geom_point(mapping = aes(x = PM25_mean2010, 
                            y = MR_2010), 
                            shape = 1) +
+  # gamma best fit
+  geom_smooth(data= data, mapping = aes(x = PM25_mean2010,y = MR_2010)) + 
+  # plot aesthetics
   theme_light() +
   xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
   ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 2: Mortality Rate vs PM2.5 Concentration with Residuals, 2010") +
+  ggtitle("2010") +
   ylim(0, 200) +
-  xlim(0, 19)+ 
-  geom_smooth(data= data, mapping = aes(x = PM25_mean2010,y = MR_2010))
-```
+  xlim(0, 19)
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](mortality_polution_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
-
-``` r
 # 2014
-ggplot(data = data) +
+plot_2014 = ggplot(data = data) +
+  # data
   geom_point(mapping = aes(x = PM25_mean2014, 
                            y = MR_2014), 
                            shape = 1) +
+  # gamma best fit
+  geom_smooth(data= data, 
+              mapping = aes(x = PM25_mean2014,y = MR_2014)) +
+  # plot aesthetics  
   theme_light() +
   xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
   ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 3: Mortality Rate vs PM2.5 Concentration with Residuals, 2014") +
+  ggtitle("2014") +
   ylim(0, 200) +
-  xlim(0, 19) +
-  geom_smooth(data= data, 
-              mapping = aes(x = PM25_mean2014,y = MR_2014))
+  xlim(0, 19)
+
+
+# multi plot of all 3 exploratory plots/fits
+grid.arrange(plot_2005, plot_2010, plot_2014, nrow = 1,
+             top = textGrob("Figure 1: Mortality Rate vs PM2.5 Concentration with Fit", 
+                            gp=gpar(fontsize=16)))
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](mortality_polution_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
+![](mortality_polution_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+<center>
+
+<sup><i>Figure 1: Is the county level Mortality Rate vs PM2.5
+Concentration <b>(Black)</b> and a smooth gamma fit
+<b><span style="color: blue"> (Blue) </span></b> for each year: 2005,
+2010, and 2014 .</i></sup>
+
+</center>
 
 ``` r
 # Linear models for each year.
@@ -721,87 +926,13 @@ summary(model_2014)
     ## Multiple R-squared:   0.17,  Adjusted R-squared:  0.1697 
     ## F-statistic: 635.9 on 1 and 3105 DF,  p-value: < 2.2e-16
 
-``` r
-# Plot of data, best fit line, and model residuals for 2005
-ggplot() +
-  geom_point(mapping = aes(x = PM25_mean2005, y = MR_2005), 
-             data = data, 
-             shape = 1) +
-  theme_light() +
-  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
-  ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 4: Mortality Rate vs PM2.5 Concentration with Residuals, 2005") +
-  ylim(0, 200) +
-  xlim(0, 19) +
-  geom_function(fun = function(x) coef(model_2005)[1] + coef(model_2005)[2]*x, 
-                col='red', 
-                size = 1.1) +
-  geom_segment(aes(x=data$PM25_mean2005, 
-                   y= data$MR_2014 ,
-                   xend = data$PM25_mean2005, 
-                   yend = model_2005$fitted.values), 
-               alpha = 0.07,
-               col='magenta')               
-```
-
-![](mortality_polution_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
-
-``` r
-# Plot of data, best fit line, and model residuals for 2010
-ggplot(data = data) +
-  geom_point(mapping = aes(x = PM25_mean2010, 
-                           y = MR_2010), 
-                           shape = 1) +
-  theme_light() +
-  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
-  ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 5: Mortality Rate vs PM2.5 Concentration with Residuals, 2010") +
-  ylim(0, 200) +
-  xlim(0, 19)+ 
-  geom_function(fun = function(x) coef(model_2010)[1] + coef(model_2010)[2]*x, 
-              col='red', 
-              size = 1.1) +
-  geom_segment(aes(x=PM25_mean2010, 
-                   y= MR_2010 ,
-                   xend = PM25_mean2010, 
-                   yend = model_2010$fitted.values), 
-               alpha = 0.07,
-               col='magenta')
-```
-
-![](mortality_polution_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
-
-``` r
-# Plot of data, best fit line, and model residuals for 2014
-ggplot(data = data) +
-  geom_point(mapping = aes(x = PM25_mean2014, 
-                           y = MR_2014), 
-                           shape = 1) +
-  theme_light() +
-  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
-  ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 6: Mortality Rate vs PM2.5 Concentration with Residuals, 2014") +
-  ylim(0, 200) +
-  xlim(0, 19) +
-  geom_function(fun = function(x) coef(model_2014)[1] + coef(model_2014)[2]*x, 
-              col='red', 
-              size = 1.1) +
-  geom_segment(aes(x=PM25_mean2014, 
-                   y= MR_2014 ,
-                   xend = PM25_mean2014, 
-                   yend = model_2014$fitted.values), 
-               alpha = 0.07,
-               col='magenta') 
-```
-
-![](mortality_polution_files/figure-gfm/unnamed-chunk-16-3.png)<!-- -->
-
 Being unlikely that populations respond differently to PM2.5 between the
 years 2005 and 2014, all years of data are combined to get a first order
 approximation of any relationship between PM2.5 concentration and human
 morality rates.
 
 ``` r
+# creating time invariant dataset using all three years
 time_invar_data = data.frame(data$Location, data$FIPS, 
                        c(data$PM25_mean2005, data$PM25_mean2010, data$PM25_mean2014),
                        c(data$MR_2005, data$MR_2010, data$MR_2014))
@@ -813,21 +944,34 @@ colnames(time_invar_data) = c("Location", "FIPS", "PM25_mean", "MR")
 
 # All Years
 ggplot() +
+  # data
   geom_point(mapping = aes(x = PM25_mean, y = MR), 
              data = time_invar_data, 
              shape = 1) +
+  # gamma best fit
+  geom_smooth(data= time_invar_data, mapping = aes(x = PM25_mean, y = MR)) +
+  # plot aesthetics
   theme_light() +
   xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
   ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 7: Mortality Rate vs PM2.5 Concentration with Residuals") +
+  ggtitle("Figure 2: Mortality Rate vs PM2.5 Concentration, All Years") +
   ylim(0, 200) +
   xlim(0, 19) +
-  geom_smooth(data= time_invar_data, mapping = aes(x = PM25_mean,y = MR))
+  theme(plot.title = element_text(size = 16)) 
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-![](mortality_polution_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](mortality_polution_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+<center>
+
+<sup><i>Above is the county level Mortality Rate vs PM2.5 Concentration
+<b>(Black)</b> and a smooth gamma fit <b><span style="color: blue">
+(Blue) </span></b>.</i></sup>
+
+</center>
+
 Time invariant data shows a stronger linear relationship. Still retains
 trend seen in yearly models around 9 micrograms per cubic meter where
 there is an increase in mortality.
@@ -867,70 +1011,178 @@ summary(model)
 ``` r
 # plotting time invariant data, best fit, and residuals
 ggplot(data = time_invar_data) +
+  #data
   geom_point(mapping = aes(x = PM25_mean, 
                            y = MR), 
                shape = 1,
                col="black") +
-  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
-  ylab("Mortality Rate (Death per 100,000)") +
-  ggtitle("Figure 8: Mortality Rate vs PM2.5 Concentration with Residuals, All Years") +
-  ylim(0, 200) +
-  xlim(0, 19) +
+  # residuals
   geom_segment(aes(x=PM25_mean, 
                  y= MR ,
                  xend = PM25_mean, 
                  yend = model$fitted.values), 
-             alpha = 0.05,
+             alpha = 0.07,
              col='magenta') + 
-
+  # linear best fit
   geom_function(fun = function(x) coef(model)[1] + coef(model)[2]*x, 
               col='red', 
-              size = 1.1,) +
-  theme_light()
+              size = 1.1,) + 
+  # plot aesthetics
+  xlab(expression(paste(PM2.5, phantom(x), (mu*g/m^3)))) +
+  ylab("Mortality Rate (Death per 100,000)") +
+  ggtitle("Figure 3: Mortality Rate vs PM2.5 Concentration with Best Fit and Residuals, All Years") +
+  ylim(0, 200) +
+  xlim(0, 19) +
+  theme_light() +
+  theme(plot.title = element_text(size = 16)) 
 ```
 
-![](mortality_polution_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](mortality_polution_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 <center>
 
 <sup><i>Above is the county level Mortality Rate vs PM2.5 Concentration
 <b>(Black)</b>, linear regression model <b><span style="color: red">
-(Red) </span></b>, and the distribution residuals
-<b><span style="color: magenta"> (Magenta) </span></b>.</i></sup>
+(Red) </span></b>, and the residuals <b><span style="color: magenta">
+(Magenta) </span></b>.</i></sup>
 
 </center>
 
+``` r
+# residuals vs fitted
+rfitt = ggplot(mapping = aes(x=fitted(model), y=resid(model))) +
+  geom_point(shape = 1,
+              col="black") +
+  geom_hline(yintercept=0, 
+             linetype="dashed", 
+             col="cyan",size = 1) +
+  theme_light() +
+  geom_smooth(col='red') + 
+  xlab("Fitted Values") +
+  ylab("Residuals") +
+  ggtitle("Residuals vs. Fitted")
+
+# Normal Q-Q
+nqq = ggplot(data = model, aes(sample = rstandard(model))) +
+  stat_qq(shape = 1,
+          col="black") +
+  stat_qq_line(linetype="dashed",
+               col="cyan",
+               size = 1) +
+  theme_light() +
+  xlab("Theoretical Quantiles") +
+  ylab("Standardized Residuals") +
+  ggtitle("Normal Q-Q")
+
+# Side by side plots
+grid.arrange(rfitt, nqq, nrow = 1,
+             top = textGrob("Figure 4: Statistical Plots", 
+                            gp=gpar(fontsize=16)))
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](mortality_polution_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+# compute 95% prediction confidence 
+confint(model, level=0.95)
+```
+
+    ##                 2.5 %    97.5 %
+    ## (Intercept) 57.435687 60.107840
+    ## PM25_mean    3.236339  3.504497
+
+``` r
+# test homoscedasticity 
+ols_test_breusch_pagan(model)
+```
+
+    ## 
+    ##  Breusch Pagan Test for Heteroskedasticity
+    ##  -----------------------------------------
+    ##  Ho: the variance is constant            
+    ##  Ha: the variance is not constant        
+    ## 
+    ##              Data              
+    ##  ------------------------------
+    ##  Response : MR 
+    ##  Variables: fitted values of MR 
+    ## 
+    ##          Test Summary           
+    ##  -------------------------------
+    ##  DF            =    1 
+    ##  Chi2          =    25.82274 
+    ##  Prob > Chi2   =    3.742532e-07
+
 # Discussion
 
-Using all overlapping data from both sets to examine the potential
-relationship between airborne PM2.5 concentrations and mortality rates
-due to health complications which have been previously linked to its
-inhalation, a linear model was created and visualized in Figure 8.
+By using data from all sets to examine the potential relationship
+between airborne PM2.5 concentrations and mortality rates due to health
+complications which have been previously linked to its inhalation, a
+linear model was created and visualized in *Figure 3*.
 
-**Equation 1:** <br> <i>MR = (58.8 +/- 0.682) + (3.37 +/- 0.0684)p</i>
+**Equation 1: Linear Regression Best Fit** <br> *MR = (58.8 +/- 1.36) +
+(3.37 +/- 0.137)p*
 
-Equation 1 states that the Mortality Rate (MR) increases by
-approximately 3.37 per 100,000 population (p) for each integer increase
-of PM2.5 concentration measured in micrograms per cubic meter, and as
-seen in Figure 8 fits the trend data fairly well. This is an one
-variable approximation of a complex system, and as such it is not
-expected to get an exceptionally high R<sup>2</sup> value. The observed
-value was 0.2067 R<sup>2</sup> which supports the concept that mortality
-from these health conditions has other deterministic factors outside of
-PM2.5 presence in the air. However, the p-value: \< 2.2e<sup>-16</sup>
+*Equation 1* states that the Mortality Rate (MR) increases by
+approximately 3.37 deaths per 100,000 population (p) for each integer
+increase in micrograms of PM2.5 per cubic meter. This is an one variable
+approximation of a complex system, and as such it is not expected to get
+an exceptionally high R<sup>2</sup> value. The observed value was 0.2067
+R<sup>2</sup> which supports the concept that mortality from these
+health conditions has other deterministic factors outside of PM2.5
+presence in the air. However, the p-value: \< 2.2e<sup>-16</sup>
 signifies that the observed relationship between increased PM2.5
 pollution and increased mortality due to the linked health complications
 is very unlikely to be a random occurrence.
 
-Looking at the residuals, there around 9 micrograms per cubic meter
-there is a break from being normally distributed about the trend line.
-This was also observed in the single year models and is where an
+Looking at *Figure 1* and *Figure 3*, at approximately 9 micrograms
+PM2.5 per cubic meter there an unknown event. This is seen in *Figure 1*
+as a break from linearity and in *Figure 3* as a location where a
+deviation from homoscedasticity takes place. Both of these were also
+observed when investigating single year models. This is where an
 increase in morality rate occurs and is not accurately described by a
 linear fit.
 
-Moving forward, any investigation should include: <br> - other airborne
-pollutants linked to the health conditions. Specifically, any
-co-occurring pollutants present at higher PM2.5 concentrations and not
-low concentrations. <br> - further research in PM2.5 toxicity threshold
-<br> - deeper investigation into relationships between PM2.5 and
-specific causes of death, not all linked causes. <br>
+**Residuals vs Fitted:** <br> This suggests that the relationship
+between PM2.5 concentration and mortality rate is reasonable to be
+described by a linear approximation. Observations supporting this from
+*Figure 4* are that the residuals are mostly evenly distributed about
+the 0 line, and the fit of the two approximately follows the 0 line as
+well. There is a break from linearity seen for extreme values of
+morality.
+
+**Q-Q:** <br> Similar to the *Residual vs Fitted* plot in *Figure 4*,
+this supports the linear description of the relationship between PM2.5
+concentration and Mortality due to health conditions linked to PM2.5
+exposure. The linear relationship is able to describe the data, but as
+the quantiles become more extreme, deviation from this behavior occurs.
+
+**Breusch Pagan** <br> Seeing a break from homoscedasticity in
+exploratory plots, the Breusch Pagan test was used to verify that
+variances were not homogeneous. This produced a test statistic that
+strongly rejected the hypothesis that variances are produced similarly
+across all observations.
+
+Being a one parameter simplification, it was expected that no model
+would be perfect as there are many known causes to the selected health
+conditions. While *Equation 1* can be used to get an approximation of
+the death rate in each county based on pollution levels, other
+parameters need to be considered.
+
+## Moving Forward
+
+Any investigation should include:
+
+  - Other airborne pollutants linked to the health conditions.
+    Specifically, any co-occurring pollutants present at higher PM2.5
+    concentrations and not low concentrations.
+  - Include other known causes to the chosen health conditions in future
+    models.
+  - Inspect PM2.5’s relationship to morality rates for individual causes
+    of death.
+  - Further research into PM2.5 toxicity thresholds and human capacity
+    to metabolize.
+  - Deeper investigation into the event around 9 micrograms of PM2.5 per
+    cubic meter.
