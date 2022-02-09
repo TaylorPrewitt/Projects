@@ -45,34 +45,75 @@ The PM2.5 set includes both the median and the mean observations over the durati
 
 # Results
 
-![unnamed-chunk-18-1](https://user-images.githubusercontent.com/80305894/152270630-0a1051a5-47f1-42be-abfd-18a38b10ac81.png)
-<center><sup><i>Above is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b> and a non-linear trendline <b>(Blue)</b>. </i></sup></center>
+![unnamed-chunk-17-1](https://user-images.githubusercontent.com/80305894/153100009-d30fdf3c-6a2e-49fd-84e9-18a0a4b6228e.png)
+<center><sup><i>Figure 1 is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b> and a smooth gamma fit <b><span style="color: blue"> (Blue) </span></b> for each year: 2005, 2010, and 2014 .</i></sup></center> 
+
+Being unlikely that populations respond differently to PM2.5 between the years 2005 and 2014, all years of data are combined to get a first order approximation of any relationship between PM2.5 concentration and human morality rates.
+
+<br><br>
+
+![unnamed-chunk-20-1](https://user-images.githubusercontent.com/80305894/153099772-26752aa3-081d-49b4-a0bc-b3ad03f2507b.png)
+<center><sup><i>Figure 2 is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b> and a non-linear trendline <b>(Blue)</b>. </i></sup></center>
 
 <br>
-
 Time invariant data showed a stronger linear relationship. Still retains trend seen in yearly models around 9 micrograms per cubic meter where there is an increase in mortality. 
 
-<br>
+<br><br>
 
-![unnamed-chunk-19-1](https://user-images.githubusercontent.com/80305894/152268940-550a0f00-2306-407f-bdab-c83ccb783ae0.png)
+![unnamed-chunk-21-1](https://user-images.githubusercontent.com/80305894/153099829-22e3b432-ed2b-481a-9e43-e1a4fee7451a.png)
 
-<center><sup><i>Above is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b>, linear regression model <b><span style="color: red"> (Red) </span></b>, and the distribution residuals <b><span style="color: magenta"> (Magenta) </span></b>.</i></sup></center> 
+<center><sup><i>Figure 3 is the county level Mortality Rate vs PM2.5 Concentration <b>(Black)</b>, linear regression model <b><span style="color: red"> (Red) </span></b>, and the distribution residuals <b><span style="color: magenta"> (Magenta) </span></b>.</i></sup></center> 
+
+
+<br><br>
+
+![unnamed-chunk-22-1](https://user-images.githubusercontent.com/80305894/153099626-a946c10d-92b1-402f-8156-06da65724f44.png)
+
+
+
 
 
 # Discussion
 
-Using all overlapping data from both sets to examine the potential relationship between airborne PM2.5 concentrations and mortality rates due to health complications which have been previously linked to its inhalation, a linear model was created and visualized in Figure 8. 
+
+By using data from all sets to examine the potential relationship between airborne PM2.5 concentrations and mortality rates due to health complications which have been previously linked to its inhalation, a linear model was created and visualized in *Figure 3*. 
 
 
-**Equation 1:** <br>
-<i>MR = (58.8 +/- 0.682) + (3.37 +/- 0.0684)p</i>
+**Equation 1: Linear Regression Best Fit** <br>
+*MR = (58.8 +/- 1.36) + (3.37 +/- 0.137)p*
 
-Equation 1 states that the Mortality Rate (MR) increases by approximately 3.37 per 100,000 population (p) for each integer increase of PM2.5 concentration measured in micrograms per cubic meter, and as seen in Figure 8 fits the trend data fairly well. This is an one variable approximation of a complex system, and as such it is not expected to get an exceptionally high R<sup>2</sup> value. The observed value was 0.2067 R<sup>2</sup> which supports the concept that mortality from these health conditions has other deterministic factors outside of PM2.5 presence in the air. However, the p-value: < 2.2e<sup>-16</sup> signifies that the observed relationship between increased PM2.5 pollution and increased mortality due to the linked health complications is very unlikely to be a random occurrence.  
 
-Looking at the residuals, there around 9 micrograms per cubic meter there is a break from being normally distributed about the trend line. This was also observed in the single year models and is where an increase in morality rate occurs and is not accurately described by a linear fit.  
+*Equation 1* states that the Mortality Rate (MR) increases by approximately 3.37 deaths per 100,000 population (p) for each integer increase in micrograms of PM2.5 per cubic meter. This is an one variable approximation of a complex system, and as such it is not expected to get an exceptionally high R<sup>2</sup> value. The observed value was 0.2067 R<sup>2</sup> which supports the concept that mortality from these health conditions has other deterministic factors outside of PM2.5 presence in the air. However, the p-value: < 2.2e<sup>-16</sup> signifies that the observed relationship between increased PM2.5 pollution and increased mortality due to the linked health complications is very unlikely to be a random occurrence. 
 
-Moving forward, any investigation should include: <br>
-- Other airborne pollutants linked to the health conditions. <br>
-  - Specifically, any co-occurring pollutants present at higher PM2.5 concentrations and not low concentrations. <br>
-- Further research in PM2.5 toxicity threshold <br>
-- Deeper investigation into relationships between PM2.5 and specific causes of death, not all linked causes. <br>
+Looking at *Figure 1* and *Figure 3*, at approximately 9 micrograms PM2.5 per cubic meter there an unknown event.  This is seen in *Figure 1* as a break from linearity and in *Figure 3* as a location where a deviation from homoscedasticity takes place. Both of these were also observed when investigating single year models.  This is where an increase in morality rate occurs and is not accurately described by a linear fit.  
+
+
+
+**Residuals vs Fitted:**  <br>
+This suggests that the relationship between PM2.5 concentration and mortality rate is reasonable to be described by a linear approximation. Observations supporting this from *Figure 4* are that the residuals are mostly evenly distributed about the 0 line, and the fit of the two approximately follows the 0 line as well. There is a break from linearity seen for extreme values of morality.     
+
+**Q-Q:** <br>
+Similar to the *Residual vs Fitted* plot in *Figure 4*, this supports the linear description of the relationship between PM2.5 concentration and Mortality due to health conditions linked to PM2.5 exposure.  The linear relationship is able to describe the data, but as the quantiles become more extreme, deviation from this behavior occurs.  
+
+**Breusch Pagan** <br>
+Seeing a break from homoscedasticity in exploratory plots, the Breusch Pagan test was used to verify that variances were not homogeneous. This produced a test statistic that strongly rejected the hypothesis that variances are produced similarly across all observations.   
+ 
+
+Being a one parameter simplification, it was expected that no model would be perfect as there are many known causes to the selected health conditions. While *Equation 1* can be used to get an approximation of the death rate in each county based on pollution levels, other parameters need to be considered.     
+
+
+# Moving Forward 
+
+Any investigation should include:
+
+* Other airborne pollutants linked to the health conditions. Specifically, any co-occurring pollutants present at higher PM2.5 concentrations and not low concentrations.
+* Include other known causes to the chosen health conditions in future models.
+* Inspect PM2.5's relationship to morality rates for individual causes of death. 
+* Further research into PM2.5 toxicity thresholds and human capacity to metabolize.
+* Deeper investigation into the event around 9 micrograms of PM2.5 per cubic meter.
+
+
+
+
+
+
