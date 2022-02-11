@@ -13,8 +13,5 @@ Find top features for medical professionals to use in a clinical setting to iden
 Query the NASA API to gather information available about Near Earth Objects (NEO) and then calculate details about a potential impact with Earth. Organize the details and supplementary information into a data package for a UI display.
 
 ### RecreationFinder
-Serving as the foundation for an app. With a user supplied address (ex: "257 E Center Street Moab UT") find the nearest national park.  
-* Collect national park information by querying the NPS API
-* Find the nearest park via the Haversine formula
-* Prepare a data package for a UI
-* Create a mock UI output of script
+Create a Proof of Concept for an app which takes in a user supplied address (ex: "257 E Center Street Moab UT") and finds the nearest national park. This should not just be the name of a park but also contain information about the park selected to provide a better user experience.
+
