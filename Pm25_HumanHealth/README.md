@@ -99,7 +99,7 @@ Similar to the *Residual vs Fitted* plot in *Figure 4*, this supports the linear
 Seeing a break from homoscedasticity in exploratory plots, the Breusch Pagan test was used to verify that variances were not homogeneous. This produced a test statistic that strongly rejected the hypothesis that variances are produced similarly across all observations.   
  
 
-Being a one parameter simplification, it was expected that no model would be perfect as there are many known causes to the selected health conditions. While *Equation 1* can be used to get an approximation of the death rate in each county based on pollution levels, other parameters need to be considered.     
+Being a one parameter simplification, it was expected that no model would be perfect as there are many known causes to the selected health conditions. While *Equation 1* can be used to get an approximation of the death rate in each county based on pollution levels (correlation supported by the parameter p-value < 2.2e<sup>-16</sup>), other parameters need to be considered to address the low R<sup>2</sup> score.  Inclusion of other parameters and extention into higher dimension space could resolve this and yield a better correlation coefficient.  This investigation does not prove any causality between PM2.5 and increase in mortality due to these health conditions, but it does show that there is a correlation between the two with motivation for further investigation. 
 
 
 # Moving Forward 
