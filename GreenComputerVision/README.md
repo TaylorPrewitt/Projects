@@ -1,5 +1,5 @@
 # Motivation
-With the current trend in Machine Learning being to 'buy' better results by using a bigger model or more training parameters, this investigation aims to show that there is a disproportionate level of energy waste generated for the marginal improvements seen in task performance.  Training deep learning models consumes a staggering amount of electricity, and as deep learning becomes more prominent, the carbon footprint caused by keeping up with its energy demand is not sustainable.  
+With the current trend in Machine Learning being to 'buy' better results by using a bigger model or more training parameters, this investigation aims to show that there is a disproportionate level of energy waste generated for the marginal improvements seen in task performance.  Training deep learning models consumes a staggering amount of electricity, and as deep learning becomes more prominent, the carbon footprint caused by keeping up with its energy demand is an ever growing factor in climate change.    
 
 <br>
 
@@ -7,12 +7,13 @@ With the current trend in Machine Learning being to 'buy' better results by usin
 
 <br>
 
+
 # Methods and Hardware
 * All models are PyTorch implementations and pretrained on ImageNet.
-* Models are fine tuned on the MedMNIST pediatric pneumonia dataset.
-* Recorded accuracy and AUC as model evaluation metrics.
+* Models are fine tuned to the MedMNIST pediatric pneumonia dataset for image classification.
+* Accuracy and AUC used as model evaluation metrics.
 * GPU - 1 x NVIDIA Tesla T4 (Standard_NC8as_T4_v3 (8 cores, 56 GB RAM, 352 GB disk))
-* GPU performance logging completed using Azure Monitor
+* GPU performance logging completed using [Azure Monitor](https://azure.microsoft.com/en-us/services/monitor/#overview)  
 
 
 
@@ -20,6 +21,11 @@ With the current trend in Machine Learning being to 'buy' better results by usin
 
 # Results
 
+<br>
+
+![GpuUtil](https://user-images.githubusercontent.com/80305894/154773458-08828442-957a-4c0a-aef9-a288ea54e4ff.png)
+
+<sup><i>The plot above shows each model's mean GPU Utilization per minute on the NVIDIA T4 GPU while fine tuning ImageNet weights to the MedMNIST dataset.</i></sup>
 
 <br>
 
@@ -46,13 +52,16 @@ With the current trend in Machine Learning being to 'buy' better results by usin
 # Discussion
 
 ### GPU Utilization
-All models have relatively the same GPU utilization during fine-tuning.  ResNet-18 had a lower *mean* GPU utilization due to the combination of short runtime and the time granularity of observations. GPU utilization was recorded as a mean over 1 minute intervals, and ResNet-18 ran for just under 5 minutes. These are unweighted means and ResNet-18 has 1 point of low utilization which heavily effected the mean.  The behavior of GPU utilization for ResNet-18 during finetuning had a similar pattern to the other models. Overall, each model used a consistent proportion of the GPU's memory over the duration of the runtime. 
+All models had relatively the same GPU utilization during fine-tuning.  ResNet-18 had a lower reported *mean* GPU utilization due to the combination of a short runtime and the time granularity for observations. GPU utilization data was recorded as a mean over 1 minute intervals, and ResNet-18 ran for just under 5 minutes. The *Mean GPU Util (%)* values in the table are unweighted means, and ResNet-18 had 1 point of low utilization (~50%) which heavily effected the mean (Inception-v3 saw this to some degree as well). Overall, the behavior of GPU utilization for ResNet-18 during finetuning had a similar pattern to the other models; the other models had points GPU utilization records near this value as well. In general, each model used a consistent and similar proportion of the GPU's memory over the duration of their runtime.
 
-With the consistency in GPU utilization across models, a flat rate for this GPU SKU's energy consumption was 4120 Joules per minute. To put this into terms of the environment, the CO<sub>2</sub> emitted to supply that electricity is the same amount of CO<sub>2</sub> as burning half a kg of coal per minute.
+With the consistency in GPU utilization across models, a flat rate approximation for this GPU SKU's energy consumption was 4120 Joules per minute. To put this into terms of the environment, the CO<sub>2</sub> emitted to supply that electricity is the same amount of CO<sub>2</sub> as burning half a kg of coal per minute.
 
+<br>
 
 ### Impact of Model Size
 DenseNet, ResNet
+
+<br>
 
 ### InceptionV3
 
@@ -66,10 +75,20 @@ The Inception-v3 architecture had superior efficiency compared to the tested Res
 
 <br>
 
-More parameters and more network layers do not directly translate to better model performance. However, CO2 emitted due to the electricity consumed is directly proportional to runtime. Comparing the maximum accuracy improvement seen by increasing the depth of the model (DenseNet-169 vs DenseNet-201), the 5% accuracy gain by increasing the number of layers also meant an extra 4 kg of CO2 were emitted.
-Looking the two most accurate models (DenseNet-201 and Inception-v3), training DenseNet on this GPU put another 12 kg of CO2 into the atmosphere and had almost no model performance gain. Things to remember about these runs are that these are ***only fine tuning runs*** and ***the T4 is a relatively small GPU***. With full training of deep learning models easily accruing days’ worth of GPU hours on more powerful hardware the total cost of increased complexity adds up.
+### The Trade-Off 
+More parameters and more network layers do not directly translate to better model performance. However, CO<sub>2</sub> emitted due to the electricity consumed is directly proportional to runtime. Comparing the maximum accuracy improvement seen by increasing the depth of the model (DenseNet-169 vs DenseNet-201), the 5% accuracy gain by increasing the number of layers also meant an extra 4 kg of CO<sub>2</sub> were emitted.
 
-The efficiency of the model’s computational architecture is a key sustainability metric. Efficient models reduce total runtime needed as thus lower both environmental costs and operational expense. Researchers need step away from only benchmarking models with performance such metrics such as ACC and AUC, and supplement with a metric such as FLOPS. With many commercial scale deep learning models (such as the models tested) all able to get strong task results, costs become metrics of model selection.
+<br>
+
+### Cost at Scale
+Looking the two most accurate models (DenseNet-201 and Inception-v3), training DenseNet on this GPU put another 12 kg of CO<sub>2</sub> into the atmosphere and had almost no model performance gain. Things to remember about these runs are that these are ***only fine tuning runs*** and ***the T4 is a relatively small GPU***. With full training of deep learning models easily accruing days’ worth of GPU hours on more powerful hardware, the total costs of increased complexity add up.
+
+<br>
+
+### Green AI in Deep Learning
+Echoing the findings from the paper *Green AI*, efficiency of a model’s computational architecture is a key sustainability metric. However, sustainability is not the only outcome of using efficiency as a metric, but lowered operational costs are as well. Efficient models **reduce total runtime** per task and thus lower both environmental costs and operational expenses.  Less runtime equals less energy consumed and cloud hardware options are traditionally priced per hour (ex: [Azure Pricing](https://azure.microsoft.com/en-us/pricing/details/machine-learning/)). 
+
+Researchers need step away from only benchmarking models with task performance such metrics such as ACC, AUC, etc., and include a metric such as model FLOPs. With many commercial scale deep learning models (such as the models tested) all able to get comparable task results, costs become prominent metrics of model selection. Since FLOPs are agnostic to many experiemental conditions (hardware, )
     
 
 <br>
