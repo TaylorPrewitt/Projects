@@ -17,3 +17,4 @@ This should not just be the name of a park but also contain information about th
 ## Example UI for Result Output
 ![sample_results](https://user-images.githubusercontent.com/80305894/153550307-3b5dd343-54e4-4d7a-a4f8-6140ccb79afe.png)
 
+<sup>**See <a href="https://github.com/TaylorPrewitt/Projects/tree/main/RecreationFinder/ui_mock">/ui_mock</a> for larger view of each panel.</sup>
